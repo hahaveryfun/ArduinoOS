@@ -5,15 +5,16 @@ int up = 7;
 int down = 8;
 int select = 9;
 
-String currentmenu;
 int menuindex = 0;
 String mainmenu[3] = {"Start", "Some Options", "Exit"};
 String options[3] = {"Option 1", "Option 2", "Option 3"};
-int currentmenulength = sizeof(mainmenu)/sizeof(mainmenu[0]);
+String *currentmenu = mainmenu;
+int currentmenulength = sizeof(currentmenu)/sizeof(currentmenu[0]);
 //da faq ^
 //idk, stackoverflow said so, and it worked
 boolean uppressed = false;
 boolean downpressed = false;
+boolean selectpressed = false;
 boolean topcursor = true;
 
 String formatForLCD(String _s)
@@ -70,34 +71,45 @@ void setupMenu(String _menu[])
 {
   lcd.print(formatForLCD(_menu[0]));
   lcd.setCursor(0, 1);
-  if(sizeof(_menu)>1)
+  if(currentmenulength>1)
   {
     lcd.print(formatForLCD(_menu[1]));
     lcd.setCursor(0, 0); 
   }
 }
 
-void navigateUp(int _menuIndex, String _menu[])
+void selectItem(int _menuindex, String _currentmenu[])
 {
-  //only occurs when the cursor is at the top
-  if (_menuIndex-1>=0)
+  if(_currentmenu[_menuindex]=="Some Options")
   {
-    lcd.setCursor(0,0);
-    lcd.print(formatForLCD(_menu[_menuIndex-1]));
-    lcd.setCursor(0,1);
-    lcd.print(formatForLCD(_menu[_menuIndex]));
+    menuindex=0;
+    topcursor=true;
+    currentmenu = options;
+    setupMenu(options);
   }
 }
 
-void navigateDown(int _menuIndex, String _menu[])
+void navigateUp(int _menuindex, String _menu[])
 {
-  //only occurs when the cursor is at the bottom
-  if (_menuIndex+1<currentmenulength)
+  //only occurs when the cursor is at the top
+  if (_menuindex-1>=0)
   {
     lcd.setCursor(0,0);
-    lcd.print(formatForLCD(_menu[_menuIndex]));
+    lcd.print(formatForLCD(_menu[_menuindex-1]));
     lcd.setCursor(0,1);
-    lcd.print(formatForLCD(_menu[_menuIndex+1]));
+    lcd.print(formatForLCD(_menu[_menuindex]));
+  }
+}
+
+void navigateDown(int _menuindex, String _menu[])
+{
+  //only occurs when the cursor is at the bottom
+  if (_menuindex+1<currentmenulength)
+  {
+    lcd.setCursor(0,0);
+    lcd.print(formatForLCD(_menu[_menuindex]));
+    lcd.setCursor(0,1);
+    lcd.print(formatForLCD(_menu[_menuindex+1]));
   }
 }
 
@@ -119,7 +131,9 @@ void setup()
 void loop() 
 { 
   blinkSelect();
+  currentmenulength = sizeof(currentmenu)/sizeof(currentmenu[0]);
   
+  //up button code
   if(digitalRead(up)==LOW)
   {
     uppressed = true;
@@ -142,7 +156,8 @@ void loop()
     if (menuindex<0)
       menuindex=0;
   }
-  //down nav button below
+  
+  //down button code
   else if(digitalRead(down)==LOW)
   {
     downpressed = true;
@@ -165,9 +180,17 @@ void loop()
     if (menuindex>=currentmenulength)
       menuindex=currentmenulength-1;
   }
-  else
+  
+  //select button code
+  else if(digitalRead(select)==LOW)
   {
-    
+    selectpressed = true;
+  }
+  else if (selectpressed==true)
+  {
+    //button has been released after a press, do action
+    selectpressed = false;
+    selectItem(menuindex, currentmenu);
   }
 }
 
